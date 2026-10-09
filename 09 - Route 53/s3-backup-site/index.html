@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Error 500 – Internal server error</title>
+<style>
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0}
+  body{
+    display:flex;align-items:center;justify-content:center;padding:24px;
+    background:linear-gradient(160deg,#f2f2f2,#d9d9d9);
+    font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;color:#666;
+  }
+  .card{
+    width:100%;max-width:820px;background:#fafafa;padding:56px 32px 44px;text-align:center;
+    box-shadow:0 14px 28px -8px rgba(214,176,140,.55),0 2px 6px rgba(0,0,0,.06);
+  }
+  h1{margin:0;font-size:clamp(36px,7vw,48px);font-weight:700;letter-spacing:.5px;color:#666}
+  p{margin:14px 0 0;font-size:clamp(18px,3vw,22px);color:#666}
+  svg{display:block;width:100%;max-width:600px;height:auto;margin:56px auto 0}
+  .l{fill:#fff;stroke:#555;stroke-width:2}
+  .o{fill:#f5a03c;stroke:#e08a20;stroke-width:1}
+  .d{fill:#f5a03c}
+  .status{
+    display:flex;align-items:center;gap:16px;text-align:left;
+    max-width:520px;margin:48px auto 0;padding:18px 22px;
+    background:#fff;border:1px solid #e3e3e3;border-left:4px solid #2e9e5b;border-radius:6px;
+  }
+  .status .tick{flex:none;width:40px;height:40px;border-radius:50%;background:#e6f5ec;display:grid;place-items:center}
+  .status .tick svg{width:22px;height:22px;margin:0}
+  .status h2{margin:0;font-size:18px;font-weight:700;color:#3d3d3d}
+  .status h2 span{color:#2e9e5b}
+  .status p{margin:4px 0 0;font-size:15px;color:#777}
+  .badge{
+    margin-left:auto;flex:none;font-size:13px;font-weight:700;color:#1f7a44;
+    background:#e6f5ec;padding:5px 12px;border-radius:999px;white-space:nowrap;
+  }
+  footer{margin-top:28px;font-size:13px;color:#999}
+  @media (max-width:560px){
+    .card{padding:40px 18px 32px}
+    .status{flex-wrap:wrap}
+    .badge{margin-left:56px}
+  }
+</style>
+</head>
+<body>
+<main class="card">
+  <h1>ERROR 500</h1>
+  <p>Internal server error</p>
+  <svg viewBox="60 20 520 140" role="img" aria-label="A monitor with a sad face, unplugged from a server rack">
+    <line x1="20" y1="150" x2="620" y2="150" stroke="#555" stroke-width="2"/>
+    <!-- monitor -->
+    <rect class="l" x="90" y="30" width="125" height="90"/>
+    <rect x="98" y="38" width="109" height="74" fill="#e2e2e2" stroke="#999"/>
+    <circle cx="152" cy="75" r="22" fill="#f5f5f5" stroke="#555" stroke-width="2"/>
+    <circle cx="144" cy="70" r="1.8" fill="#555"/><circle cx="160" cy="70" r="1.8" fill="#555"/>
+    <path d="M143 87Q152 78 161 87" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round"/>
+    <rect class="l" x="140" y="120" width="24" height="22"/>
+    <rect class="l" x="122" y="142" width="60" height="8"/>
+    <!-- cable, unplugged -->
+    <path d="M215 112H224V140H262" fill="none" stroke="#555" stroke-width="2"/>
+    <rect class="o" x="262" y="136" width="9" height="8"/>
+    <rect class="o" x="282" y="136" width="9" height="8"/>
+    <path d="M291 140H338" fill="none" stroke="#555" stroke-width="2"/>
+    <!-- server rack -->
+    <path d="M338 140V40H345" fill="none" stroke="#555" stroke-width="2"/>
+    <g id="units">
+      <rect class="l" x="345" y="30" width="70" height="20"/>
+      <rect class="l" x="345" y="50" width="70" height="20"/>
+      <rect class="l" x="345" y="70" width="70" height="20"/>
+      <rect class="l" x="345" y="90" width="70" height="20"/>
+      <rect class="l" x="345" y="110" width="70" height="20"/>
+      <rect class="l" x="345" y="130" width="70" height="20"/>
+    </g>
+    <g class="d">
+      <circle cx="360" cy="40" r="1.8"/><circle cx="368" cy="40" r="1.8"/><circle cx="376" cy="40" r="1.8"/>
+      <circle cx="360" cy="60" r="1.8"/><circle cx="368" cy="60" r="1.8"/><circle cx="376" cy="60" r="1.8"/>
+      <circle cx="360" cy="80" r="1.8"/><circle cx="368" cy="80" r="1.8"/><circle cx="376" cy="80" r="1.8"/>
+      <circle cx="360" cy="100" r="1.8"/><circle cx="368" cy="100" r="1.8"/><circle cx="376" cy="100" r="1.8"/>
+      <circle cx="360" cy="120" r="1.8"/><circle cx="368" cy="120" r="1.8"/><circle cx="376" cy="120" r="1.8"/>
+      <circle cx="360" cy="140" r="1.8"/><circle cx="368" cy="140" r="1.8"/><circle cx="376" cy="140" r="1.8"/>
+    </g>
+    <rect x="415" y="30" width="45" height="120" fill="#fff" stroke="#555" stroke-width="2"/>
+    <path stroke="#555" stroke-width="1.5" d="M420 30v120M425 30v120M430 30v120M435 30v120M440 30v120M445 30v120M450 30v120M455 30v120"/>
+  </svg>
+
+  <section class="status" aria-live="polite">
+    <div class="tick">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#2e9e5b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+    </div>
+    <div>
+      <h2>S3 failover site: <span>Success</span></h2>
+      <p>S3 bucket online. Part 1 done.</p>
+    </div>
+    <div class="badge">Online</div>
+  </section>
+
+  <footer>This page is served from an Amazon S3 failover bucket.</footer>
+</main>
+</body>
+</html>
