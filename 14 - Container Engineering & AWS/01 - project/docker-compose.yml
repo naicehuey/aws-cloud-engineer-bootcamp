@@ -1,0 +1,9 @@
+services:
+  web:
+    build:
+      context: .
+    image: project14-webapp:1.0
+    container_name: project14-app
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
