@@ -1,109 +1,63 @@
-# AWS Console Navigation Lab
+# Project 00 — AWS Console
 
-## Project Objective
+## Overview
 
-The objective of this project was to become familiar with the AWS Management Console before creating cloud resources. This project focused on understanding the console layout, Regions, Availability Zones, billing, AWS Credits, navigation, and commonly used AWS services.
+My first AWS project. Before creating any resources, I spent time getting to know the AWS Management Console: where things are, how Regions and Availability Zones work, and where to check billing and credits. I'm a beginner with AWS, so this README records what I did and what I understood so far.
 
----
+## Stack
 
-## Background
+AWS Management Console · Billing \& Cost Management
 
-Before deploying cloud resources, every Cloud Engineer must know how to navigate the AWS Management Console efficiently. This project provides the foundation for all future AWS projects in this bootcamp.
+## What I practiced
 
----
+* Navigating the Console Home page
+* Using the search bar to find services
+* Pinning services I use often
+* Switching AWS Regions
+* Understanding Regions and Availability Zones
+* Finding the Billing dashboard and checking AWS Credits
 
-## Skills Practiced
+## Project structure
 
-- AWS Console Navigation
-- AWS Region Selection
-- Availability Zones
-- Billing and Cost Management
-- AWS Credits
-- Search Bar
-- Pinned Services
+```text
+01 - project/
+02 - documentation/
+03 - screenshots/
+```
 
----
+## What I did
 
-## AWS Services Used
+1. Logged in to the AWS Management Console.
+2. Explored the Console Home page.
+3. Read about what an AWS Region is.
+4. Read about what an Availability Zone is.
+5. Opened the Billing dashboard.
+6. Checked my available AWS Credits.
+7. Pinned the services I expect to use often.
+8. Practiced moving between services.
 
-- AWS Management Console
-- Billing & Cost Management
+## Key ideas (in my own words)
 
----
+* **Region:** a geographic location where AWS runs multiple data centers.
+* **Availability Zone (AZ):** one or more isolated data centers inside a Region. A Region has several AZs, so if one has a problem the others can keep running.
+* **AWS Credits:** promotional credit that pays for eligible services. I check them before creating resources so I don't get surprise charges.
 
-## Implementation Steps
+## Challenge
 
-1. Logged into the AWS Management Console.
-2. Explored the AWS Console Home page.
-3. Learned the purpose of AWS Regions.
-4. Learned the purpose of Availability Zones.
-5. Navigated to the Billing Dashboard.
-6. Verified available AWS Credits.
-7. Pinned frequently used AWS services.
-8. Practiced navigating between AWS services.
+At first the Console felt overwhelming because there are so many services. The search bar and pinned services helped a lot. I also mixed up Regions and Availability Zones until I understood that a Region contains several AZs.
 
----
+## Validation checklist
 
-## Key Concepts Learned
+* \[x] Logged in and explored the Console Home page
+* \[x] Learned the difference between Regions and Availability Zones
+* \[x] Opened the Billing dashboard
+* \[x] Checked AWS Credits
+* \[x] Pinned frequently used services
+* \[x] Screenshots captured (see `03 - screenshots/`)
 
-### AWS Region
+## Notes
 
-An AWS Region is a physical geographic location where Amazon operates multiple data centers.
+No billable resources were created in this project. Always check the selected Region before creating anything. This is a beginner lab and I'm still learning.
 
-### Availability Zone
+Documentation was written with AI assistance (Claude) for structure and clarity. I did the lab in the AWS Console myself and checked what is written here against what I did.
 
-An Availability Zone consists of one or more isolated data centers within an AWS Region. Multiple Availability Zones improve fault tolerance and high availability.
-
-### AWS Credits
-
-AWS Credits reduce eligible AWS charges and should be monitored throughout the learning process.
-
----
-
-## Challenges
-
-At first, the AWS Console appeared overwhelming because of the large number of available services. Learning to use the search bar and pinned services made navigation much easier.
-
----
-
-## Cost Considerations
-
-No billable resources were created during this project.
-
----
-
-## Screenshots
-
-- AWS Console Home
-- Region Selector
-- Billing Dashboard
-- AWS Credits
-- Pinned Services
-
----
-
-## Lessons Learned
-
-Understanding the AWS Console before creating resources makes cloud administration much more efficient. Knowing where to find billing information, regions, and frequently used services helps prevent mistakes and unnecessary costs.
-
----
-
-## Interview Questions
-
-**Q:** What is an AWS Region?
-
-**A:** An AWS Region is a physical geographic location containing multiple Availability Zones.
-
-**Q:** What is an Availability Zone?
-
-**A:** An Availability Zone is one or more isolated data centers within an AWS Region that provide redundancy and high availability.
-
-**Q:** Why should engineers monitor AWS Credits?
-
-**A:** Monitoring AWS Credits helps control costs and ensures promotional credits are used efficiently.
-
----
-
-## Project Status
-
-✅ Completed

@@ -1,0 +1,23 @@
+{
+    "Version": "2008-10-17",
+    "Id": "PolicyForCloudFrontPrivateContent",
+    "Statement": [
+        {
+            "Sid": "AllowCloudFrontServicePrincipal",
+            "Effect": "Allow",
+            "Principal": {
+                "Service": "cloudfront.amazonaws.com"
+            },
+            "Action": "s3:GetObject",
+            "Resource": "arn:aws:s3:::cdn-origin-static-huey2026/*",
+            "Condition": {
+                "ArnLike": {
+                    "AWS:SourceArn": [
+                        "arn:aws:cloudfront::881027529328:distribution/E2HDDC1GUDDSPU",
+                        "arn:aws:cloudfront::881027529328:distribution/EI8QR09DCQBBY"
+                    ]
+                }
+            }
+        }
+    ]
+}

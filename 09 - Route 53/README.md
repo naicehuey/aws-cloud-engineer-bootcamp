@@ -1,225 +1,116 @@
-# Route 53 Automated Failover Architecture
+# Project 09 — Route 53 Automated Failover
 
 ## Overview
+A small DNS failover project. Route 53 normally sends visitors to a web server on EC2 (the primary). A Route 53 health check watches that server. If the server stops answering, Route 53 starts sending visitors to a backup page hosted on S3 instead. I'm still learning DNS and Route 53, so this README records the plan I followed and what I have evidence for so far.
 
-This project demonstrates an automated DNS failover architecture using Amazon Route 53, a primary Amazon EC2 web server, and a secondary Amazon S3 static website.
+> **Status:** the S3 backup page is built. The EC2, health check, failover records and outage test sections are marked "to confirm" until I add my screenshots and results.
 
-```text
-                       [ Web Client / Browser ]
-                                  |
-                                  v
-                        [ Amazon Route 53 ]
-                   (Public Hosted Zone & DNS)
-                                  |
-                   +--------------+--------------+
-                   |                             |
-         (Primary: Healthy)           (Secondary: Failover)
-                   |                             |
-                   v                             v
-         [ EC2 Web Server ]           [ S3 Static Website ]
-         (Primary Application)         (Maintenance / Backup)
-```
+## Stack
+Amazon Route 53 (hosted zone, health check, failover records) · Amazon EC2 (Amazon Linux 2023, Apache) · Amazon S3 static website · AWS Management Console
 
-## AWS Services
+## What I practiced
+- Hosting a backup page on S3 static website hosting
+- Installing a web server on EC2 with User Data
+- Creating a Route 53 health check
+- Using the Failover routing policy (Primary and Secondary records)
+- Simulating an outage by stopping the instance
 
-| Service | Purpose |
+## Configuration (plan)
+| Item | Value |
 |---|---|
-| Amazon Route 53 | DNS resolution and failover routing |
-| Route 53 Health Check | Monitors the primary EC2 endpoint |
-| Amazon EC2 | Hosts the primary application |
-| Amazon S3 | Hosts the backup static website |
+| Secondary (backup) | S3 static website, `index.html` |
+| Primary | EC2 `Primary-Web-Server`, Amazon Linux 2023, `t3.micro`, Apache |
+| Health check | `Primary-EC2-HealthCheck`, HTTP, port 80, path `/`, by IP address |
+| Primary record | Type A, TTL 60, Failover = Primary, ID `Primary-EC2-Record` |
+| Secondary record | Type A, alias to the S3 website endpoint, Failover = Secondary, ID `Secondary-S3-Record` |
+| Domain / hosted zone | Not recorded yet |
 
-## Cost Safety Strategy
-
-The supplied project specification assumes:
-
-- Route 53 Hosted Zone: approximately $0.50/month, prorated according to the original notes.
-- EC2: one `t3.micro`, stopped or terminated immediately after testing.
-- S3: minimal storage/request usage for the small backup page.
-- Route 53 Health Check: the original notes state that the first 50 basic health checks are free.
-
-Pricing changes over time, so verify current AWS pricing before recreating the lab.
-
-## Step 1 — Create the Secondary S3 Backup Site
-
-1. Open **AWS Console → S3 → Create bucket**.
-2. Use a unique bucket name, for example `backup-site-huey-2026`.
-3. For this lab, disable **Block all public access** and acknowledge the warning.
-4. Create the bucket.
-5. Open **Properties → Static website hosting → Edit**.
-6. Enable static website hosting and set the index document to `index.html`.
-7. Under **Permissions → Bucket policy**, use:
-
-```json
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "PublicReadGetObject",
-      "Effect": "Allow",
-      "Principal": "*",
-      "Action": "s3:GetObject",
-      "Resource": "arn:aws:s3:::YOUR-BUCKET-NAME/*"
-    }
-  ]
-}
-```
-
-Replace `YOUR-BUCKET-NAME` with the actual bucket name.
-
-8. Upload an `index.html` containing:
-
-```html
-<h1>[FAILOVER SUCCESS] Backup Endpoint Active - System Under Maintenance</h1>
-```
-
-9. Copy the **Bucket website endpoint** and test it in a browser.
-
-**Screenshot #1 — `01-s3-backup-endpoint.png`**: browser showing the S3 backup page.
-
-## Step 2 — Create the Primary EC2 Web Server
-
-1. Open **EC2 → Launch instance**.
-2. Name: `Primary-Web-Server`.
-3. AMI: **Amazon Linux 2023**.
-4. Instance type: `t3.micro`.
-5. Enable auto-assigned public IPv4.
-6. Create a security group allowing HTTP TCP/80 from `0.0.0.0/0`. If SSH is required, restrict TCP/22 to your own public IP/32.
-7. Under **Advanced details → User data**, use:
-
-```bash
-#!/bin/bash
-
-dnf update -y
-dnf install -y httpd
-
-systemctl start httpd
-systemctl enable httpd
-
-echo "[PRIMARY ONLINE] Welcome to Huey's Production Application Server" > /var/www/html/index.html
-```
-
-8. Launch the instance.
-9. When it is running, copy its public IPv4 address and open `http://PUBLIC-IP`.
-
-Expected result:
-
+## Project structure
 ```text
-[PRIMARY ONLINE] Welcome to Huey's Production Application Server
+09-route53/
+├── project/
+│   ├── index.html          # my S3 backup page
+│   ├── user-data.sh        # EC2 User Data (from the lab plan)
+│   └── bucket-policy.json  # public-read policy (replace YOUR-BUCKET-NAME)
+├── documentation/
+│   ├── Route53-Journal.md
+│   └── Route53-Notes.md
+├── architecture/
+│   └── Route53-Architecture-Diagram.md
+├── screenshots/
+│   ├── 01-s3-backup-endpoint.png
+│   ├── 02-primary-ec2-active.png
+│   ├── 03-route53-healthcheck-healthy.png
+│   ├── 04-route53-failover-records.png
+│   └── 05-failover-traffic-verified.png
+└── README.md
 ```
 
-**Screenshot #2 — `02-primary-ec2-active.png`**: browser showing the primary page.
-
-## Step 3 — Create the Route 53 Public Hosted Zone
-
-1. Open **Route 53 → Hosted zones**.
-2. Click **Create hosted zone**.
-3. Enter a domain you control.
-4. Select **Public hosted zone**.
-5. Create the hosted zone.
-
-If the domain is registered with an external registrar, update the registrar's name-server records with the four Route 53 NS values shown in the hosted zone.
-
-## Step 4 — Create the Route 53 Health Check
-
-1. Open **Route 53 → Health checks → Create health check**.
-2. Name: `Primary-EC2-HealthCheck`.
-3. Monitoring type: **Endpoint**.
-4. Specify endpoint by **IP address**.
-5. Protocol: **HTTP**.
-6. IP address: the EC2 public IPv4 address.
-7. Port: `80`.
-8. Path: `/`.
-9. Continue and create the health check.
-10. Wait for it to report **Healthy**.
-
-**Screenshot #3 — `03-route53-healthcheck-healthy.png`**: Route 53 Health Checks showing the primary check as Healthy.
-
-## Step 5 — Configure Route 53 Failover Records
-
-### Primary record
-
-Create a record with:
-
-- Record name: blank or `app`
-- Type: `A`
-- Value: EC2 public IPv4
-- TTL: `60`
-- Routing policy: **Failover**
-- Failover record type: **Primary**
-- Health check: `Primary-EC2-HealthCheck`
-- Record ID: `Primary-EC2-Record`
-
-### Secondary record
-
-Create another record with the same name:
-
-- Type: `A`
-- Alias: enabled where the console supports the required S3 website endpoint target
-- Target: S3 website endpoint
-- Region: the S3 bucket's region
-- Routing policy: **Failover**
-- Failover record type: **Secondary**
-- Record ID: `Secondary-S3-Record`
-
-**Screenshot #4 — `04-route53-failover-records.png`**: hosted zone showing both failover records.
-
-## Step 6 — Simulate Outage and Verify Failover
-
-1. Open **EC2 → Instances**.
-2. Select `Primary-Web-Server`.
-3. Choose **Instance state → Stop instance**.
-4. Return to **Route 53 → Health checks**.
-5. Wait for the health check to become **Unhealthy**. The supplied specification expects roughly 1–2 minutes, but actual timing can vary.
-6. Open the configured domain/hostname.
-
-Expected backup result:
-
+## Architecture
 ```text
-[FAILOVER SUCCESS] Backup Endpoint Active - System Under Maintenance
+        Browser
+           |
+           v
+   +----------------+
+   |   Route 53     |   Health check watches EC2 (HTTP :80 /)
+   +-------+--------+
+           |
+   +-------+---------------+
+   |                       |
+Healthy -> Primary     Unhealthy -> Secondary
+   |                       |
+   v                       v
++---------+          +-------------+
+|  EC2    |          |  S3 website |
+| Apache  |          |  backup page|
++---------+          +-------------+
 ```
 
-**Screenshot #5 — `05-failover-traffic-verified.png`**: browser showing the backup page after the primary has failed.
+## Screenshots
+Add these once they are captured and hidden where needed (account IDs, public IPs):
 
-## Step 7 — Restore and Clean Up
+1. `01-s3-backup-endpoint.png` — S3 backup page in the browser
+2. `02-primary-ec2-active.png` — primary page from EC2
+3. `03-route53-healthcheck-healthy.png` — health check shows Healthy
+4. `04-route53-failover-records.png` — Primary and Secondary records
+5. `05-failover-traffic-verified.png` — backup page served after the outage
 
-Start the EC2 instance again and wait for Apache and the health check to recover.
+## What I did
+1. **Backup page (done):** built `index.html` for the S3 bucket. It's a styled "Error 500 / Internal server error" page with a green card saying the S3 failover site is online.
+2. **Primary server (to confirm):** launch `Primary-Web-Server` with the User Data script in `project/`.
+3. **Hosted zone (to confirm):** create a public hosted zone for a domain I control.
+4. **Health check (to confirm):** create `Primary-EC2-HealthCheck` against the EC2 public IP.
+5. **Failover records (to confirm):** create the Primary and Secondary records with the same name.
+6. **Outage test (to confirm):** stop the instance, wait for Unhealthy, then open the domain.
+7. **Clean up (to confirm):** terminate EC2, delete the health check, empty and delete the bucket, delete the hosted zone if not needed.
 
-Then remove temporary resources:
+## Key ideas (in my own words)
+- **Route 53** answers DNS questions. It doesn't restart or fix my server.
+- **Health check:** Route 53 asks the server "are you OK?" over HTTP. No answer means Unhealthy.
+- **Failover routing:** the Primary record is used while it's healthy. If not, Route 53 answers with the Secondary.
+- **TTL:** how long other DNS servers may remember an answer. A TTL of 60 makes it faster but not instant.
+- **S3 as backup:** a static page costs almost nothing and needs no second server.
 
-1. Terminate the EC2 instance.
-2. Delete the Route 53 health check.
-3. Delete the Route 53 hosted zone if it is no longer needed.
-4. Empty the S3 bucket.
-5. Delete the S3 bucket.
+My one-sentence rule: **Route 53 decides, the health check monitors, EC2 serves the primary, S3 serves the backup.**
 
-If the domain is registered separately, deleting the hosted zone does not cancel the domain registration.
+## Challenge
+Not recorded yet. I'll add what went wrong and how I fixed it after I confirm the full run.
 
-## Verification Checklist
+## Validation checklist
+- [x] S3 backup page created (`index.html`)
+- [ ] S3 backup page loads from the website endpoint
+- [ ] EC2 primary page loads directly
+- [ ] Public hosted zone exists
+- [ ] Health check is Healthy
+- [ ] Primary and Secondary records exist
+- [ ] Health check turns Unhealthy after stopping EC2
+- [ ] The domain serves the S3 page during the outage
+- [ ] Primary recovers after starting EC2
+- [ ] Resources cleaned up
 
-- [ ] S3 backup website loads directly.
-- [ ] EC2 primary website loads directly.
-- [ ] Route 53 hosted zone exists.
-- [ ] Primary health check is Healthy.
-- [ ] Primary and secondary failover records exist.
-- [ ] Primary EC2 is stopped for the outage test.
-- [ ] Health check becomes Unhealthy.
-- [ ] DNS eventually serves the S3 backup endpoint.
-- [ ] Primary EC2 can be restored.
-- [ ] Health check returns to Healthy.
-- [ ] Temporary resources are cleaned up.
+## Notes
+- The backup bucket is public so visitors can read the page. Only the one page lives there.
+- Route 53 charges for hosted zones and health checks, and EC2 charges while running. I clean up after testing and check Billing. I didn't repeat the "first 50 health checks are free" claim from my original notes because I haven't confirmed it, so I'll read the current Route 53 pricing page.
+- From what I've read, an alias record pointing at an S3 website endpoint may need the bucket name to match the record name. I'll check this when I build the records.
 
-## Key Concepts
-
-> **Route 53 decides where DNS traffic should go, the health check supplies endpoint health information, EC2 serves the primary application, and S3 provides the backup endpoint.**
-
-## Evidence
-
-```text
-screenshots/
-├── 01-s3-backup-endpoint.png
-├── 02-primary-ec2-active.png
-├── 03-route53-healthcheck-healthy.png
-├── 04-route53-failover-records.png
-└── 05-failover-traffic-verified.png
-```
+Documentation was written with AI assistance (Claude) for structure and clarity. I do the labs in the AWS Console myself and check what is written here against what I did.

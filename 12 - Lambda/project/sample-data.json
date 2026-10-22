@@ -1,0 +1,9 @@
+{
+  "record_id": "REC-9941",
+  "source": "S3-Automated-Upload",
+  "status": "PROCESSED",
+  "payload": {
+    "user": "Huey",
+    "action": "portfolio_data_ingestion"
+  }
+}

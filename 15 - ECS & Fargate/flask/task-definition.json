@@ -1,0 +1,29 @@
+{
+  "family": "project15-flask",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "256",
+  "memory": "512",
+  "executionRoleArn": "arn:aws:iam::881027529328:role/ecsTaskExecutionRole",
+  "containerDefinitions": [
+    {
+      "name": "project15-flask",
+      "image": "881027529328.dkr.ecr.us-east-1.amazonaws.com/project14-webapp:1.0",
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": 8000,
+          "protocol": "tcp"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/project15-flask",
+          "awslogs-region": "us-east-1",
+          "awslogs-stream-prefix": "ecs"
+        }
+      }
+    }
+  ]
+}

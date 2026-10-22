@@ -1,81 +1,45 @@
-# 03 - EC2 Web Server
+# Project 03 — EC2 Web Server
 
 ## Overview
+My first Linux server on AWS. I launched an Ubuntu server with Amazon EC2, connected to it from the browser with EC2 Instance Connect, installed the Apache2 web server, and used it to host a simple HTML page that I opened through the server's public IPv4 address. This was also my first time practicing Linux commands together with AWS. I'm a beginner with EC2 and Linux, so this README records what I did and what I understood so far.
 
-This project demonstrates the deployment of a Linux web server using Amazon Elastic Compute Cloud (Amazon EC2).
+## Stack
+Amazon EC2 · Ubuntu Server 24.04 LTS · Apache2 · Linux · HTML · AWS Management Console
 
-An Ubuntu EC2 instance was launched, configured with Apache2, connected through EC2 Instance Connect, and used to host a simple static website. During the lab, I also practiced basic Linux commands, verified server health, and learned how web servers deliver content over the internet.
+## What I practiced
+- Launching an EC2 instance
+- Choosing an AMI and an instance type
+- Setting up a Security Group (SSH, HTTP and HTTPS rules)
+- Connecting to a Linux server with EC2 Instance Connect
+- Basic Linux commands
+- Installing and checking Apache2
+- Finding the Apache web root and replacing the default page
+- Opening the site through the public IPv4 address
 
-This project was completed as part of my AWS Cloud Engineer Bootcamp.
+## Instance configuration
+| Setting | Value |
+|---|---|
+| Operating system | Ubuntu Server 24.04 LTS |
+| Instance type | t3.micro |
+| Storage | 8 GB gp3 |
+| Connection method | EC2 Instance Connect |
+| Web server | Apache2 |
 
----
+## Security group rules
+| Type | Port | Why |
+|---|---|---|
+| SSH | TCP 22 | Remote administration |
+| HTTP | TCP 80 | Website access |
+| HTTPS | TCP 443 | Secure web traffic (SSL was not set up yet) |
 
-## Objectives
+## Project structure
+```text
+01 - project/
+02 - documentation/
+03 - screenshots/
+```
 
-The objectives of this project were to:
-
-- Understand the purpose of Amazon EC2.
-- Launch an Ubuntu EC2 instance.
-- Understand Amazon Machine Images (AMIs).
-- Select an appropriate instance type.
-- Configure a Security Group.
-- Allow SSH, HTTP, and HTTPS traffic.
-- Connect to a Linux server using EC2 Instance Connect.
-- Learn basic Linux navigation commands.
-- Install and verify the Apache2 web server.
-- Understand the Apache web root directory.
-- Deploy a simple HTML website.
-- Access the website through the instance's public IPv4 address.
-- Document the deployment process.
-
----
-
-## AWS Service Used
-
-### Amazon EC2
-
-Amazon Elastic Compute Cloud (EC2) is a service that provides secure, resizable virtual servers in the AWS Cloud.
-
-It allows users to launch Linux or Windows servers on demand and host applications, websites, databases, APIs, and other cloud workloads.
-
----
-
-## Technologies Used
-
-- Amazon EC2
-- Ubuntu Server 24.04 LTS
-- Apache2
-- Linux
-- HTML
-
----
-
-## Instance Configuration
-
-- Operating System: Ubuntu Server 24.04 LTS
-- Instance Type: t3.micro
-- Storage: 8 GB gp3
-- Authentication: EC2 Instance Connect
-- Web Server: Apache2
-
----
-
-## Security Group Configuration
-
-The instance firewall was configured with the following inbound rules:
-
-- SSH (TCP Port 22) – Remote administration
-- HTTP (TCP Port 80) – Website access
-- HTTPS (TCP Port 443) – Secure web traffic
-
-These rules allow administrators to manage the server and users to access hosted websites.
-
----
-
-## Linux Commands Practiced
-
-During this project I practiced:
-
+## Linux commands I practiced
 ```bash
 whoami
 pwd
@@ -89,58 +53,44 @@ sudo systemctl status apache2
 apache2 -v
 ```
 
----
-
-## Practical Work
-
-The following activities were completed:
-
+## What I did
 1. Launched an Ubuntu EC2 instance.
-2. Configured networking and security groups.
+2. Set up networking and the security group.
 3. Connected using EC2 Instance Connect.
 4. Explored the Linux environment.
-5. Verified the current user and working directory.
-6. Checked Ubuntu version information.
+5. Checked the current user and working directory.
+6. Checked the Ubuntu version.
 7. Installed Apache2.
-8. Verified that Apache was running.
-9. Verified the Apache version.
-10. Explored the Apache web directory.
-11. Tested the web server using the public IPv4 address.
-12. Replaced the default website with a custom HTML page.
+8. Checked that Apache was running and which version it was.
+9. Explored the Apache web directory.
+10. Opened the default Apache page using the public IPv4 address.
+11. Replaced the default page with my own HTML page.
+12. Organised the screenshots and wrote this documentation.
 
----
+## Key ideas (in my own words)
+- **EC2 instance:** a virtual computer running in AWS.
+- **AMI:** the template used to create an instance (the operating system and starting software).
+- **Instance type:** decides the CPU and memory. Mine was `t3.micro`.
+- **Security group:** a virtual firewall that decides which traffic can reach the instance.
+- **Apache2:** a web server that answers browser requests with website files.
+- **Web root:** `/var/www/html`. Files placed there are served to visitors, and `index.html` becomes the home page.
+- **Public IPv4 address:** the address visitors use to reach the instance from the internet.
 
-## Screenshots
+## Challenge
+I tried to open the website with HTTPS before any SSL certificate was set up, and it didn't work. After checking, I opened it with HTTP and saw that Apache was serving the page correctly. The lesson for me: opening port 443 isn't enough. HTTPS also needs a certificate, and the server has to be set up for it.
 
-The project includes screenshots covering:
+## Validation checklist
+- [x] Ubuntu EC2 instance launched
+- [x] Security group set up (SSH, HTTP, HTTPS)
+- [x] Connected with EC2 Instance Connect
+- [x] Linux commands practiced
+- [x] Apache2 installed and running
+- [x] Website opened through the public IPv4 address
+- [x] Default page replaced with a custom HTML page
+- [x] Screenshots captured (see `03 - screenshots/`)
+- [ ] HTTPS with an SSL certificate (not done yet)
 
-- EC2 Dashboard
-- Launch Configuration
-- Successful Launch
-- Running Instance
-- Status Checks
-- Linux Login
-- Apache Installation
-- Apache Running
-- Web Directory
-- Default Apache Website
-- Custom Website Deployment
+## Notes
+The instance and its public IPv4 address can cost money while they exist, so I check my billing page and stop or terminate the instance when I'm finished. I'm still learning Linux and networking and want to practice more of both in the projects ahead.
 
----
-
-## Skills Learned
-
-- Amazon EC2
-- Linux Fundamentals
-- Apache Web Server
-- Security Groups
-- Public IPv4 Address
-- Ubuntu Server Administration
-- Cloud Infrastructure
-- Web Hosting
-
----
-
-## Outcome
-
-Successfully deployed a Linux web server on AWS, connected through the browser, installed Apache, explored the Linux environment, and hosted a custom static website accessible through the instance's public IP address.
+Documentation was written with AI assistance (Claude) for structure and clarity. I did the lab in the AWS Console myself and checked what is written here against what I did.
