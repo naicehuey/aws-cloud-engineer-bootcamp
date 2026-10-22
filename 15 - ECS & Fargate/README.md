@@ -1,66 +1,123 @@
 # Project 15 — Flask on Amazon ECS Fargate
 
 ## Overview
-Deploy an existing containerized Flask app to Amazon ECS using AWS Fargate. The image is stored in ECR, the task runs in a VPC subnet with a public IP, and container logging is configured for CloudWatch Logs.
+In Project 14 I put a Flask app in a Docker image and pushed it to Amazon ECR. In this project I ran that same image on Amazon ECS with AWS Fargate, so I didn't have to manage any servers. I wrote a task definition, created a cluster and a service, and opened the app in my browser through the task's public IP on port 8000. I'm still learning ECS, so this README records what I did and what I haven't confirmed yet.
 
-## Confirmed configuration
+## Stack
+Amazon ECS · AWS Fargate · Amazon ECR · Amazon VPC · Amazon CloudWatch Logs · AWS IAM · AWS CLI · Docker image from Project 14
+
+## What I practiced
+- Writing and registering an ECS task definition (JSON)
+- Creating an ECS cluster and a service
+- Running a container on Fargate in my own VPC subnet
+- Using the ECR image from Project 14
+- Giving the task an execution role and sending logs to CloudWatch
+- Opening a security group port for a demo and noting the risk
+
+## Configuration
 | Item | Value |
 |---|---|
-| Account | `881027529328` |
-| Region | `us-east-1` |
-| ECR image | `881027529328.dkr.ecr.us-east-1.amazonaws.com/project14-webapp:1.0` |
+| Region | us-east-1 |
+| ECR image | `<ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com/project14-webapp:1.0` |
 | ECS cluster | `project15-flask-cluster` |
-| ECS service | `project15-flask-service` |
-| Task definition | `project15-flask:1` |
-| Launch type | Fargate |
-| CPU / memory | `256` CPU units / `512` MiB |
-| Container port | `8000` |
-| Execution role | `ecsTaskExecutionRole` |
-| CloudWatch log group | `/ecs/project15-flask` |
-| VPC | `vpc-01c44e7ea49b69463` |
-| Subnet | `subnet-04c56a3bb83bc0945` (`10.0.1.0/24`) |
-| Security group | `sg-01e46e86490958ba6` |
-| Task ENI | `eni-0d600a09ba136656b` |
-| Public IP observed | `18.206.87.153` |
+| ECS service | `project15-flask-service`, Fargate, desired count 1 |
+| Task definition | `project15-flask`, revision 1 |
+| CPU / memory | 256 (0.25 vCPU) / 512 MiB |
+| Network mode | `awsvpc`, public IP enabled |
+| Container port | 8000 |
+| Execution role | `ecsTaskExecutionRole` (`AmazonECSTaskExecutionRolePolicy`) |
+| Log group | `/ecs/project15-flask` (`awslogs`, stream prefix `ecs`) |
+| Network | my VPC, public subnet `10.0.1.0/24` with an internet gateway route |
+| Security group | TCP 8000 open to `0.0.0.0/0` for the demo |
 
-**The public IP may change if ECS replaces the task.** Treat it as the observed address during this test, not a permanent endpoint.
-
-## What was done
-1. Prepared the VPC, subnet, internet-gateway route, and security group.
-2. Used the existing ECR image `project14-webapp:1.0`.
-3. Prepared `ecsTaskExecutionRole` with `AmazonECSTaskExecutionRolePolicy`.
-4. Created CloudWatch log group `/ecs/project15-flask`.
-5. Created `task-definition.json` for Fargate, `awsvpc`, 256 CPU units, 512 MiB memory, port 8000, and `awslogs`.
-6. Registered task definition revision 1.
-7. Created cluster `project15-flask-cluster`.
-8. Created service `project15-flask-service`, desired count 1, using the existing subnet/security group with public IP assignment enabled.
-9. ECS reported the service reached steady state with 1 running task.
-10. Retrieved public IP `18.206.87.153`; user confirmed the app was reachable in a browser.
+## Project structure
+```text
+15-ecs-fargate/
+├── project/
+│   └── task-definition.json    # account ID replaced with <ACCOUNT_ID>
+├── documentation/
+│   ├── ECS-Fargate-Journal.md
+│   └── ECS-Fargate-Notes.md
+├── architecture/
+│   └── ECS-Fargate-Architecture-Diagram.md
+├── screenshots/
+│   ├── 01-live-flask-application.png
+│   ├── 02-ecs-service-running.png
+│   ├── 03-ecs-task-definition.png
+│   ├── 04-fargate-task-networking.png
+│   ├── 05-cloudwatch-container-logs.png
+│   └── 06-ecr-container-image.png
+└── README.md
+```
 
 ## Architecture
-See [`architecture/architecture-diagram.md`](architecture/architecture-diagram.md).
+```text
+Browser --HTTP :8000--> Security group --> Task network interface (awsvpc)
+                                                    |
+ECR (project14-webapp:1.0) --image pull--> Fargate task (Flask, port 8000)
+                                                    |
+ECS service (desired 1) in ECS cluster ------------>+--> CloudWatch Logs (/ecs/project15-flask)
+Task definition (project15-flask:1)
+```
 
-## Screenshot evidence
-Save actual screenshots in `screenshots/`:
-- `01-live-flask-application.png` — browser showing the real app and address bar.
-- `02-ecs-service-running.png` — service showing desired 1 / running 1.
-- `03-ecs-task-definition.png` — revision 1 JSON or container details showing image, port, role, logs, CPU, and memory.
-- `04-fargate-task-networking.png` — task networking, subnet, security group, ENI, and public IP if shown.
-- `05-cloudwatch-container-logs.png` — actual log stream/events. Do not claim logs exist until events are visible.
-- `06-ecr-container-image.png` — repository image tag 1.0 and digest (supporting evidence).
+## Screenshots
+Add these after hiding the account ID, public IP and any resource IDs I don't want public:
 
-## Security and cost notes
-- The security group was described as allowing inbound TCP 8000 from `0.0.0.0/0`; this exposes the demonstration app publicly. Restrict or remove this rule when public access is no longer required.
-- AWS CLI identity output showed root credentials (`arn:aws:iam::881027529328:root`). Use a least-privilege IAM identity or role for future routine work.
-- Fargate, public IPv4 addresses, and CloudWatch ingestion/storage can incur charges. Clean up resources when finished.
-- The log group exists, but actual log events have not yet been confirmed.
-- Task health was reported as `UNKNOWN`; ECS still reported steady state and the user confirmed browser reachability. No explicit container health check was configured in the task definition.
+1. `01-live-flask-application.png` — the app in the browser
+2. `02-ecs-service-running.png` — service with desired 1, running 1
+3. `03-ecs-task-definition.png` — task definition details
+4. `04-fargate-task-networking.png` — subnet, security group, network interface
+5. `05-cloudwatch-container-logs.png` — real log events (only once I can see them)
+6. `06-ecr-container-image.png` — image tag 1.0 in ECR
 
-## Troubleshooting
-- If the app becomes unreachable, confirm Flask binds to `0.0.0.0:8000`, not only `127.0.0.1`.
-- Check the security group's TCP 8000 ingress, subnet route to the internet gateway, and task public IP.
-- Inspect ECS service events, stopped-task reasons, and CloudWatch log streams before changing settings.
-- If the app listens on a different port, update the task definition, register a new revision, and update the service.
+## What I did
+1. Prepared the VPC, public subnet, internet gateway route and security group (TCP 8000).
+2. Used the image from Project 14 in ECR (`project14-webapp:1.0`).
+3. Made sure `ecsTaskExecutionRole` had `AmazonECSTaskExecutionRolePolicy`.
+4. Created the log group `/ecs/project15-flask`.
+5. Wrote `task-definition.json` and registered revision 1.
+6. Created the cluster `project15-flask-cluster`.
+7. Created the service `project15-flask-service` (Fargate, desired count 1, public IP on).
+8. The service reached steady state with 1 running task. The task status was RUNNING.
+9. Opened `http://<task public IP>:8000` in my browser and the app loaded.
 
-## Status
-**Fargate deployment and public browser reachability are confirmed.** Screenshot collection, confirmation of actual log events, and security cleanup remain.
+## What the task definition says
+- `family`: groups the revisions of this task definition.
+- `networkMode: awsvpc`: each task gets its own network interface.
+- `requiresCompatibilities: FARGATE`: runs on Fargate.
+- `cpu` and `memory`: the task size.
+- `executionRoleArn`: lets ECS pull the image and set up logging. This is different from a task role, which is for the app's own AWS calls.
+- `portMappings`: container port 8000, which must match the port Flask listens on.
+- `logConfiguration`: sends output to CloudWatch Logs.
+
+## Key ideas (in my own words)
+- **ECR** stores the image. **ECS** decides what to run. **Fargate** provides the compute without servers for me to manage.
+- **Task definition:** the blueprint for the container.
+- **Service:** keeps the number of running tasks at the number I asked for.
+- **Cluster:** the group that holds services and tasks.
+- **Security group and public IP:** decide whether I can reach the task from the internet.
+- **Public IP changes:** if ECS replaces the task, the address changes, so it isn't a permanent endpoint.
+
+My one-sentence rule: **ECR stores the image, the task definition describes it, the service keeps it running, and Fargate supplies the compute.**
+
+## Challenge
+Not recorded yet. I'll add any problems I hit and how I fixed them.
+
+## Validation checklist
+- [x] Task definition registered (revision 1)
+- [x] Cluster and service created
+- [x] Service at steady state, 1 task running
+- [x] App reachable in the browser on port 8000
+- [ ] Real log events seen in CloudWatch (log group exists, events not confirmed)
+- [ ] Screenshots saved
+- [ ] Port 8000 rule restricted after the demo
+- [ ] Resources cleaned up
+
+## Notes
+- **Task health showed UNKNOWN.** I didn't add a health check to the task definition. ECS still reported steady state and the app loaded.
+- **Not done:** load balancer, HTTPS, autoscaling, CI/CD. This project is one task with a public IP, so I won't claim any of those.
+- **Security:** port 8000 is open to the whole internet for the demo. I restrict or remove the rule afterwards.
+- **Root credentials:** my AWS CLI was using the root account. Lesson learned: I will create an IAM user with only the permissions I need and use that.
+- **Cost:** a running Fargate task, a public IPv4 address and log storage can all charge. When I'm finished I set the service's desired count to 0, then delete the service and cluster, and check Billing.
+
+Documentation was written with AI assistance (Claude) for structure and clarity. I did the lab myself and checked what is written here against what I did.
