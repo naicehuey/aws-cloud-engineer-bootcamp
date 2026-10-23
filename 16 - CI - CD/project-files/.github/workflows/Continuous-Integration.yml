@@ -1,0 +1,108 @@
+name: Project 16 - CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "14 - Container Engineering & AWS/project/**"
+      - ".github/workflows/project16-ci.yml"
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "14 - Container Engineering & AWS/project/**"
+      - ".github/workflows/project16-ci.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Test Flask Application
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: "14 - Container Engineering & AWS/project"
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Run automated tests
+        run: python -m unittest discover -s tests -v
+
+  deploy:
+    name: Build and Deploy to AWS
+    needs: test
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write
+
+    env:
+      AWS_REGION: us-east-1
+      ECR_REPOSITORY: project14-webapp
+      ECS_CLUSTER: project15-flask-cluster
+      ECS_SERVICE: project15-flask-service
+      CONTAINER_NAME: project15-flask
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::<ACCOUNT_ID>:role/GitHubActionsProject16Role
+          aws-region: us-east-1
+
+      - name: Log in to Amazon ECR
+        id: ecr-login
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push Docker image
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.ecr-login.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build \
+            -t "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" \
+            "14 - Container Engineering & AWS/project"
+          docker push "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Download current ECS task definition
+        run: |
+          aws ecs describe-task-definition \
+            --task-definition project15-flask \
+            --query taskDefinition \
+            --output json > task-definition.json
+
+      - name: Update task definition image
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: task-definition.json
+          container-name: project15-flask
+          image: ${{ steps.build-image.outputs.image }}
+
+      - name: Deploy to Amazon ECS
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: project15-flask-service
+          cluster: project15-flask-cluster
+          wait-for-service-stability: true
